@@ -1,5 +1,4 @@
 using AnyBoost
-using AnyBoost.Utils
 using Plots
 using DataFrames
 using CSV
@@ -13,8 +12,8 @@ const def_params = [
     :eta=>.3,
     :max_depth=>6
     ]
-xgloss(::AltStage.MSELoss) = "reg:linear"
-xgloss(::AltStage.LogitLoss) = "binary:logistic"
+xgloss(::AnyBoost.MSELoss) = "reg:linear"
+xgloss(::AnyBoost.LogitLoss) = "binary:logistic"
 
 function xgb(trdata, tedata, l; numround=300)
     trdm = DMatrix(trdata.X, label = trdata.y)

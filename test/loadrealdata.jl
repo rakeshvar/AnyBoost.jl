@@ -3,32 +3,42 @@ using CSV, StatsBase
 jp(csv) = joinpath(@__DIR__, csv)
 
 datasets = Dict(
-"toy1" => (jp("../data/toy/toy1.csv"), 90, :Y),
-"toy2" => (jp("../data/toy/toy2.csv"), 90, :Y),
-"wine" => (jp("../data/wine/wine5K_f32.csv"), 3600, :quality),
-"garnet" => (jp("../data/garnet/garnet_norm_f32.csv"), 9000, :TiO2),
+:toy1 => (jp("./data/toy/toy1.csv"), 90, :Y),
+:toy2 => (jp("./data/toy/toy2.csv"), 90, :Y),
+:wine => (jp("./data/wine/wine5K_f32.csv"), 3600, :quality),
+:garnet => (jp("./data/garnet/garnet_norm_f32.csv"), 9000, :TiO2),
 )
 
-loadrealdata(datasetname::String) = loadrealdata(datasets[datasetname]...)
+type RealData{T}
+  X::AbstractMatrix{T}
+  signal::AbstractVector{T}
+  noise::AbstractVector{T}
+  y::AbstractVector{T}
+  n::Int
+end
 
-function loadrealdata(csvfilename::String, nuse::Int, yname::Symbol)
+RealData(X, y) = RealData(X, y, y*0, y, length(y))
+
+loadrealdata(datasetname::Symbol) = loadrealdata(datasets[datasetname]...)
+
+function loadrealdata(csvfilename::String, ntrain::Int, yname::Symbol)
     data = CSV.read(csvfilename)
     disallowmissing!(data)
-    nall = nrow(data)
+    ntotal = nrow(data)
 
     srand(20181103)
-    leftout = sample(1:nall, nall-nuse, replace=false)
-    leftin = trues(nall)
-    leftin[leftout] = false
+    testindices = sample(1:ntotal, ntotal-ntrain, replace=false)
+    trainindices = trues(ntotal)
+    trainindices[testindices] = false
 
-    dataout = data[leftout, :]
-    data = data[leftin, :]
+    test = data[testindices, :]
+    train = data[trainindices, :]
 
     xnames = [name for name in names(data) if name != yname]
-    datax = Matrix(data[:, xnames])
-    datay = Vector(data[yname])
-    dataoutx = Matrix(dataout[:, xnames])
-    dataouty = Vector(dataout[yname])
+    trainx = Matrix(train[:, xnames])
+    trainy = Vector(train[yname])
+    testx = Matrix(test[:, xnames])
+    testy = Vector(test[yname])
 
-    datax, datay, dataoutx, dataouty
+    RealData(trainx, trainy), RealData(testx, testy)
 end

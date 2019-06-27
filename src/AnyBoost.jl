@@ -23,6 +23,4 @@ include("AlgBoosting.jl")
 include("AlgStagewise.jl")
 include("AlgNN.jl")
 
-include("SubCatchUpLars.jl")
-include("AlgLars.jl")
 end
